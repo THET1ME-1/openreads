@@ -159,6 +159,37 @@ class BackupGeneral {
     return null;
   }
 
+  static Future<Uint8List?> pickFileAndGetContent({
+    List<String>? allowedExtensions,
+  }) async {
+    if (Platform.isAndroid) {
+      final safStream = SafStream();
+      final safUtil = SafUtil();
+
+      final pickedFile = await safUtil.pickFile();
+
+      if (pickedFile == null) {
+        BackupGeneral.showInfoSnackbar(LocaleKeys.backup_not_valid.tr());
+        return null;
+      }
+
+      return await safStream.readFileBytes(pickedFile.uri);
+    } else if (Platform.isIOS) {
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        withData: true,
+        type: allowedExtensions != null ? FileType.custom : FileType.any,
+        allowedExtensions: allowedExtensions,
+      );
+
+      if (result != null) {
+        File file = File(result.files.single.path!);
+        return file.readAsBytesSync();
+      }
+    }
+
+    return null;
+  }
+
   static void showRestoreMissingCoversDialog({
     required BuildContext context,
     required List<int> bookIDs,

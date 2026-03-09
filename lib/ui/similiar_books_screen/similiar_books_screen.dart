@@ -1,9 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:openreads/core/themes/app_theme.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:openreads/generated/locale_keys.g.dart';
+import 'package:openreads/logic/cubit/current_book_cubit.dart';
+import 'package:openreads/logic/cubit/selected_books_cubit.dart';
 import 'package:openreads/main.dart';
 import 'package:openreads/model/book.dart';
+import 'package:openreads/ui/book_screen/book_screen.dart';
 import 'package:openreads/ui/books_screen/widgets/widgets.dart';
 
 class SimiliarBooksScreen extends StatefulWidget {
@@ -62,11 +65,14 @@ class _SimiliarBooksScreenState extends State<SimiliarBooksScreen> {
               ? bookCubit.booksWithSameTag
               : bookCubit.booksWithSameAuthor,
           builder: (context, AsyncSnapshot<List<Book>?> snapshot) {
-            if (snapshot.hasData) {
-              return BooksList(
-                books: snapshot.data!,
-                listNumber: 0,
-              );
+            if (snapshot.hasData && snapshot.data != null) {
+              final books = snapshot.data!;
+              if (books.isEmpty) {
+                return Center(
+                  child: Text(LocaleKeys.this_list_is_empty_1.tr()),
+                );
+              }
+              return _buildBooksList(books);
             } else if (snapshot.hasError) {
               return Text(
                 snapshot.error.toString(),
@@ -77,6 +83,52 @@ class _SimiliarBooksScreenState extends State<SimiliarBooksScreen> {
               );
             }
           }),
+    );
+  }
+
+  Widget _buildBooksList(List<Book> books) {
+    return BlocBuilder<SelectedBooksCubit, List<int>>(
+      builder: (context, selectedList) {
+        final multiSelectMode = selectedList.isNotEmpty;
+        return ListView.builder(
+          itemCount: books.length,
+          itemBuilder: (context, index) {
+            final heroTag = 'tag_similar_${books[index].id}';
+            Color? color =
+                multiSelectMode && selectedList.contains(books[index].id)
+                    ? Theme.of(context).colorScheme.secondaryContainer
+                    : null;
+            return BookCardList(
+              book: books[index],
+              heroTag: heroTag,
+              cardColor: color,
+              addBottomPadding: (books.length == index + 1),
+              onPressed: () {
+                if (books[index].id == null) return;
+                if (multiSelectMode) {
+                  context
+                      .read<SelectedBooksCubit>()
+                      .onBookPressed(books[index].id!);
+                  return;
+                }
+                context.read<CurrentBookCubit>().setBook(books[index]);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookScreen(heroTag: heroTag),
+                  ),
+                );
+              },
+              onLongPressed: () {
+                if (books[index].id == null) return;
+                context
+                    .read<SelectedBooksCubit>()
+                    .onBookPressed(books[index].id!);
+              },
+            );
+          },
+        );
+      },
     );
   }
 

@@ -134,6 +134,7 @@ class BookScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTitleDetail(state),
+                      _buildNarratorsDetail(state),
                       _buildSeriesInfo(state),
                       _buildStatusDetail(state, context),
                       _buildBookFormatDetail(state),
@@ -211,10 +212,23 @@ class BookScreen extends StatelessWidget {
   }
 
   Widget _buildPagesDetail(Book state) {
+    // Don't show pages for audiobooks (they use percentage)
+    if (state.bookFormat == BookFormat.audiobook) {
+      return const SizedBox();
+    }
     return (state.pages != null)
         ? BookDetail(
             title: LocaleKeys.pages_uppercase.tr(),
             text: (state.pages ?? "").toString(),
+          )
+        : const SizedBox();
+  }
+
+  Widget _buildNarratorsDetail(Book state) {
+    return (state.narrators != null && state.narrators!.isNotEmpty)
+        ? BookDetail(
+            title: 'Рассказчики',
+            text: state.narrators!,
           )
         : const SizedBox();
   }

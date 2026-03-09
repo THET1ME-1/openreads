@@ -100,6 +100,13 @@ class EditBookCubit extends Cubit<Book> {
     emit(book);
   }
 
+  void setNarrators(String narrators) {
+    final book = state.copyWith();
+    book.narrators = narrators.isNotEmpty ? narrators : null;
+
+    emit(book);
+  }
+
   void setBlurHash(String? blurHash) {
     final book = state.copyWith();
     book.blurHash = blurHash;

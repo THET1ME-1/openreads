@@ -21,6 +21,7 @@ import 'package:openreads/ui/add_book_screen/add_book_screen.dart';
 import 'package:openreads/ui/books_screen/books_screen.dart';
 import 'package:openreads/ui/display_screen/display_screen.dart';
 import 'package:openreads/ui/search_ol_screen/search_ol_screen.dart';
+import 'package:openreads/ui/search_fantlab_screen/search_fantlab_screen.dart';
 import 'package:openreads/ui/search_page/search_page.dart';
 import 'package:openreads/ui/series_screen/series_list_screen.dart';
 import 'package:openreads/ui/series_screen/widgets/add_edit_series_dialog.dart';
@@ -143,6 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return AddBookSheet(
             addManually: _addBookManually,
             searchInOpenLibrary: _searchInOpenLibrary,
+            searchInFantLab: _searchInFantLab,
             scanBarcode: _scanBarcode,
           );
         },
@@ -155,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
           return AddBookSheet(
             addManually: _addBookManually,
             searchInOpenLibrary: _searchInOpenLibrary,
+            searchInFantLab: _searchInFantLab,
             scanBarcode: _scanBarcode,
           );
         },
@@ -187,6 +190,23 @@ class _HomeScreenState extends State<HomeScreen> {
       context,
       MaterialPageRoute(
         builder: (context) => SearchOLScreen(
+          status: _getStatusForNewBook(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _searchInFantLab() async {
+    _setEmptyBookForEditScreen();
+
+    Navigator.pop(context);
+    await Future.delayed(const Duration(milliseconds: 100));
+    if (!mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => SearchFantLabScreen(
           status: _getStatusForNewBook(),
         ),
       ),

@@ -25,6 +25,7 @@ class Book {
   String? olid;
   String? tags;
   String? myReview;
+  String? narrators;
   String? notes;
   Uint8List? cover; // Not used since 2.2.0
   String? blurHash;
@@ -50,6 +51,7 @@ class Book {
     this.olid,
     this.tags,
     this.myReview,
+    this.narrators,
     this.notes,
     this.cover,
     this.blurHash,
@@ -100,6 +102,7 @@ class Book {
       olid: json['olid'],
       tags: json['tags'],
       myReview: json['my_review'],
+      narrators: json['narrators'],
       notes: json['notes'],
       cover: json['cover'] != null
           ? Uint8List.fromList(json['cover'].cast<int>().toList())
@@ -140,6 +143,7 @@ class Book {
     String? olid,
     String? tags,
     String? myReview,
+    String? narrators,
     String? notes,
     Uint8List? cover,
     String? blurHash,
@@ -165,6 +169,7 @@ class Book {
       olid: olid ?? this.olid,
       tags: tags ?? this.tags,
       myReview: myReview ?? this.myReview,
+      narrators: narrators ?? this.narrators,
       notes: notes ?? this.notes,
       cover: cover ?? this.cover,
       blurHash: blurHash ?? this.blurHash,
@@ -193,6 +198,7 @@ class Book {
       olid: olid,
       tags: tags,
       myReview: myReview,
+      narrators: narrators,
       notes: notes,
       cover: null,
       blurHash: blurHash,
@@ -277,6 +283,7 @@ class Book {
       'olid': olid,
       'tags': tags,
       'my_review': myReview,
+      'narrators': narrators,
       'notes': notes,
       'blur_hash': blurHash,
       'has_cover': hasCover ? 1 : 0,

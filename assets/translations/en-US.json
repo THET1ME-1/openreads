@@ -317,5 +317,7 @@
     "book_number_in_series": "#{}",
     "previous_book": "Previous book",
     "next_book": "Next book",
-    "manage_series": "Manage series"
+    "manage_series": "Manage series",
+    "search_in_fantlab": "Search in FantLab",
+    "type_lowercase": "type"
 }

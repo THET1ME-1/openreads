@@ -35,17 +35,21 @@ class AddBookScreen extends StatefulWidget {
     super.key,
     this.fromOpenLibrary = false,
     this.fromOpenLibraryEdition = false,
+    this.fromFantLab = false,
     this.editingExistingBook = false,
     this.duplicatingBook = false,
     this.coverOpenLibraryID,
+    this.fantLabCoverUrl,
     this.work,
   });
 
   final bool fromOpenLibrary;
   final bool fromOpenLibraryEdition;
+  final bool fromFantLab;
   final bool editingExistingBook;
   final bool duplicatingBook;
   final int? coverOpenLibraryID;
+  final String? fantLabCoverUrl;
   final String? work;
 
   @override
@@ -56,6 +60,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
   final _titleCtrl = TextEditingController();
   final _subtitleCtrl = TextEditingController();
   final _authorCtrl = TextEditingController();
+  final _narratorsCtrl = TextEditingController();
   final _pagesCtrl = TextEditingController();
   final _pubYearCtrl = TextEditingController();
   final _descriptionCtrl = TextEditingController();
@@ -84,6 +89,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
     _titleCtrl.text = book.title;
     _subtitleCtrl.text = book.subtitle ?? '';
     _authorCtrl.text = book.author;
+    _narratorsCtrl.text = book.narrators ?? '';
     _pubYearCtrl.text = (book.publicationYear ?? '').toString();
     _pagesCtrl.text = (book.pages ?? '').toString();
     _descriptionCtrl.text = book.description ?? '';
@@ -92,7 +98,9 @@ class _AddBookScreenState extends State<AddBookScreen> {
     _myReviewCtrl.text = book.myReview ?? '';
     _notesCtrl.text = book.notes ?? '';
 
-    if (!widget.fromOpenLibrary && !widget.fromOpenLibraryEdition) {
+    if (!widget.fromOpenLibrary &&
+        !widget.fromOpenLibraryEdition &&
+        !widget.fromFantLab) {
       if (!widget.duplicatingBook) {
         context.read<EditBookCoverCubit>().setCover(book.getCoverBytes());
       }
@@ -352,6 +360,10 @@ class _AddBookScreenState extends State<AddBookScreen> {
       context.read<EditBookCubit>().setAuthor(_authorCtrl.text);
     });
 
+    _narratorsCtrl.addListener(() {
+      context.read<EditBookCubit>().setNarrators(_narratorsCtrl.text);
+    });
+
     _pagesCtrl.addListener(() {
       context.read<EditBookCubit>().setPages(_pagesCtrl.text);
     });
@@ -414,6 +426,40 @@ class _AddBookScreenState extends State<AddBookScreen> {
       if (widget.fromOpenLibrary) {
         _downloadWork();
       }
+    } else if (widget.fromFantLab) {
+      if (widget.fantLabCoverUrl != null) {
+        _downloadFantLabCover();
+      } else {
+        context.read<EditBookCoverCubit>().setCover(null);
+      }
+    }
+  }
+
+  void _downloadFantLabCover() async {
+    setState(() {
+      _isCoverDownloading = true;
+    });
+
+    try {
+      final response = await http.get(Uri.parse(widget.fantLabCoverUrl!));
+
+      if (!mounted) return;
+
+      if (response.bodyBytes.length > 500) {
+        await generateBlurHash(response.bodyBytes, context);
+
+        if (!mounted) return;
+        context.read<EditBookCoverCubit>().setCover(response.bodyBytes);
+        context.read<EditBookCubit>().setHasCover(true);
+      }
+    } catch (_) {
+      // Cover download failed, ignore
+    }
+
+    if (mounted) {
+      setState(() {
+        _isCoverDownloading = false;
+      });
     }
   }
 
@@ -435,6 +481,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
     _titleCtrl.dispose();
     _subtitleCtrl.dispose();
     _authorCtrl.dispose();
+    _narratorsCtrl.dispose();
     _pagesCtrl.dispose();
     _pubYearCtrl.dispose();
     _descriptionCtrl.dispose();
@@ -488,10 +535,11 @@ class _AddBookScreenState extends State<AddBookScreen> {
                   hint: LocaleKeys.enter_title.tr(),
                   icon: Icons.book,
                   keyboardType: TextInputType.text,
-                  autofocus:
-                      (widget.fromOpenLibrary || widget.editingExistingBook)
-                          ? false
-                          : true,
+                  autofocus: (widget.fromOpenLibrary ||
+                          widget.fromFantLab ||
+                          widget.editingExistingBook)
+                      ? false
+                      : true,
                   maxLines: 5,
                   maxLength: 255,
                   textCapitalization: TextCapitalization.sentences,
@@ -521,6 +569,16 @@ class _AddBookScreenState extends State<AddBookScreen> {
                         suggestions: snapshot.data,
                       );
                     }),
+                const SizedBox(height: 10),
+                BookTextField(
+                  controller: _narratorsCtrl,
+                  hint: 'Рассказчики',
+                  icon: Icons.record_voice_over,
+                  keyboardType: TextInputType.text,
+                  maxLines: 5,
+                  maxLength: 255,
+                  textCapitalization: TextCapitalization.words,
+                ),
                 const Padding(
                   padding: EdgeInsets.all(10),
                   child: Divider(),

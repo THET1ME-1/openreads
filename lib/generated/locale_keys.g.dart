@@ -317,4 +317,6 @@ abstract class LocaleKeys {
   static const previous_book = 'previous_book';
   static const next_book = 'next_book';
   static const manage_series = 'manage_series';
+  static const search_in_fantlab = 'search_in_fantlab';
+  static const type_lowercase = 'type_lowercase';
 }

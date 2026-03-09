@@ -86,6 +86,7 @@ class CSVImportOpenreads {
         title: _getField(i, csv, 'title'),
         subtitle: _getField(i, csv, 'subtitle'),
         author: _getField(i, csv, 'author'),
+        narrators: _getNullableField(i, csv, 'narrators'),
         description: _getField(i, csv, 'description'),
         status: _getStatus(i, csv),
         favourite: _getBoolField(i, csv, 'favourite'),
@@ -131,7 +132,17 @@ class CSVImportOpenreads {
   }
 
   static String _getField(int i, List<List<dynamic>> csv, String field) {
-    return csv[i][csv[0].indexOf(field)].toString();
+    final index = csv[0].indexOf(field);
+    if (index == -1) return '';
+    return csv[i][index].toString();
+  }
+
+  static String? _getNullableField(
+      int i, List<List<dynamic>> csv, String field) {
+    final index = csv[0].indexOf(field);
+    if (index == -1) return null;
+    final value = csv[i][index].toString();
+    return value.isNotEmpty ? value : null;
   }
 
   static bool _getBoolField(int i, List<List<dynamic>> csv, String field) {

@@ -303,5 +303,7 @@
     "book_number_in_series": "№{}",
     "previous_book": "Предыдущая книга",
     "next_book": "Следующая книга",
-    "manage_series": "Управление сериями"
+    "manage_series": "Управление сериями",
+    "search_in_fantlab": "Поиск в FantLab",
+    "type_lowercase": "тип"
 }

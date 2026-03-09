@@ -13,6 +13,8 @@ import 'package:openreads/generated/locale_keys.g.dart';
 import 'package:openreads/logic/cubit/selected_books_cubit.dart';
 import 'package:openreads/main.dart';
 import 'package:openreads/model/book.dart';
+import 'package:openreads/model/book_series.dart';
+import 'package:openreads/model/book_series_link.dart';
 import 'package:openreads/ui/add_book_screen/widgets/book_text_field.dart';
 import 'package:openreads/ui/add_book_screen/widgets/book_type_dropdown.dart';
 
@@ -27,6 +29,7 @@ class MultiSelectFAB extends StatelessWidget {
   ];
 
   final _authorCtrl = TextEditingController();
+  final _narratorsCtrl = TextEditingController();
 
   String _getLabel(BulkEditOption bulkEditOption) {
     String label = '';
@@ -36,6 +39,12 @@ class MultiSelectFAB extends StatelessWidget {
         break;
       case BulkEditOption.author:
         label = LocaleKeys.change_books_author.tr();
+        break;
+      case BulkEditOption.narrators:
+        label = 'Изменить рассказчиков';
+        break;
+      case BulkEditOption.series:
+        label = 'Изменить цикл';
         break;
       default:
         label = '';
@@ -78,7 +87,11 @@ class MultiSelectFAB extends StatelessWidget {
                   ? _buildEditFormat(selectedList, context)
                   : bulkEditOption == BulkEditOption.author
                       ? _buildEditAuthor(selectedList, context)
-                      : const SizedBox(),
+                      : bulkEditOption == BulkEditOption.narrators
+                          ? _buildEditNarrators(selectedList, context)
+                          : bulkEditOption == BulkEditOption.series
+                              ? _buildEditSeries(selectedList, context)
+                              : const SizedBox(),
             ],
           ),
         ),
@@ -149,11 +162,46 @@ class MultiSelectFAB extends StatelessWidget {
       await bookCubit.updateBook(book);
     }
 
-    // if (context.mounted) {
-    //   context
-    //       .read<PbSyncBloc>()
-    //       .add(TriggerSyncEvent(booksToSync: booksToSync));
-    // }
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(LocaleKeys.update_successful_message.tr())),
+    );
+  }
+
+  Future<void> _updateBooksNarrators(
+    BuildContext context,
+    List<int> selectedIds,
+  ) async {
+    final narrators = _narratorsCtrl.text;
+
+    for (final bookId in selectedIds) {
+      Book? book = await bookCubit.getBook(bookId);
+
+      if (book == null) continue;
+      final updated = book.copyWith();
+      updated.narrators = narrators.isNotEmpty ? narrators : null;
+
+      await bookCubit.updateBook(updated);
+    }
+
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(LocaleKeys.update_successful_message.tr())),
+    );
+  }
+
+  Future<void> _updateBooksSeries(
+    BuildContext context,
+    List<int> selectedIds,
+    BookSeries series,
+  ) async {
+    for (final bookId in selectedIds) {
+      final link = BookSeriesLink(
+        bookId: bookId,
+        seriesId: series.id!,
+      );
+      await seriesCubit.addBookToSeries(link);
+    }
 
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(
@@ -343,6 +391,82 @@ class MultiSelectFAB extends StatelessWidget {
                 },
               ),
               SpeedDialChild(
+                child: Icon(
+                  Icons.record_voice_over,
+                  color: Theme.of(context).colorScheme.onSecondary,
+                  size: 18,
+                ),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                labelBackgroundColor:
+                    Theme.of(context).colorScheme.surfaceVariant,
+                foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                label: 'Изменить рассказчиков',
+                onTap: () {
+                  if (Platform.isIOS) {
+                    showCupertinoModalBottomSheet(
+                      context: context,
+                      expand: false,
+                      builder: (_) {
+                        return _buildBottomSheet(
+                          context,
+                          BulkEditOption.narrators,
+                          selectedList,
+                        );
+                      },
+                    );
+                  } else if (Platform.isAndroid) {
+                    showModalBottomSheet(
+                        isScrollControlled: true,
+                        context: context,
+                        builder: (context) {
+                          return _buildBottomSheet(
+                            context,
+                            BulkEditOption.narrators,
+                            selectedList,
+                          );
+                        });
+                  }
+                },
+              ),
+              SpeedDialChild(
+                child: FaIcon(
+                  FontAwesomeIcons.layerGroup,
+                  color: Theme.of(context).colorScheme.onSecondary,
+                  size: 18,
+                ),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+                labelBackgroundColor:
+                    Theme.of(context).colorScheme.surfaceVariant,
+                foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+                label: 'Изменить цикл',
+                onTap: () {
+                  if (Platform.isIOS) {
+                    showCupertinoModalBottomSheet(
+                      context: context,
+                      expand: false,
+                      builder: (_) {
+                        return _buildBottomSheet(
+                          context,
+                          BulkEditOption.series,
+                          selectedList,
+                        );
+                      },
+                    );
+                  } else if (Platform.isAndroid) {
+                    showModalBottomSheet(
+                        isScrollControlled: true,
+                        context: context,
+                        builder: (context) {
+                          return _buildBottomSheet(
+                            context,
+                            BulkEditOption.series,
+                            selectedList,
+                          );
+                        });
+                  }
+                },
+              ),
+              SpeedDialChild(
                 child: FaIcon(
                   FontAwesomeIcons.trash,
                   color: Theme.of(context).colorScheme.onTertiary,
@@ -394,6 +518,100 @@ class MultiSelectFAB extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+
+  Column _buildEditNarrators(List<int> selectedList, BuildContext context) {
+    return Column(
+      children: [
+        BookTextField(
+          controller: _narratorsCtrl,
+          hint: 'Рассказчики',
+          icon: Icons.record_voice_over,
+          keyboardType: TextInputType.name,
+          maxLines: 5,
+          maxLength: 255,
+          textCapitalization: TextCapitalization.words,
+          padding: const EdgeInsets.all(0),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Expanded(
+              child: FilledButton(
+                style: ButtonStyle(
+                  shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(cornerRadius),
+                    ),
+                  ),
+                ),
+                onPressed: () => _updateBooksNarrators(context, selectedList),
+                child: Text(LocaleKeys.save.tr()),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditSeries(List<int> selectedList, BuildContext context) {
+    return FutureBuilder<List<BookSeries>>(
+      future: seriesCubit.repository.getAllSeries(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final allSeries = snapshot.data!;
+        if (allSeries.isEmpty) {
+          return Column(
+            children: [
+              const Text('Нет доступных циклов. Создайте цикл сначала.'),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: FilledButton(
+                      style: ButtonStyle(
+                        shape: MaterialStateProperty.all(
+                          RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(cornerRadius),
+                          ),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('OK'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 300),
+              child: ListView.builder(
+                shrinkWrap: true,
+                itemCount: allSeries.length,
+                itemBuilder: (context, index) {
+                  final series = allSeries[index];
+                  return ListTile(
+                    leading:
+                        const FaIcon(FontAwesomeIcons.layerGroup, size: 18),
+                    title: Text(series.name),
+                    onTap: () =>
+                        _updateBooksSeries(context, selectedList, series),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

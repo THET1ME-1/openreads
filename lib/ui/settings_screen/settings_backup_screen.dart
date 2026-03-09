@@ -36,6 +36,7 @@ class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
   bool _importingGoodreadsCSV = false;
   bool _importingBookwyrmCSV = false;
   bool _importingCSV = false;
+  bool _importingXLSX = false;
 
   late DeviceInfoPlugin deviceInfo;
   late AndroidDeviceInfo androidInfo;
@@ -123,6 +124,23 @@ class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
     }
 
     setState(() => _importingCSV = false);
+  }
+
+  _startImportingXLSX(context) async {
+    setState(() => _importingXLSX = true);
+
+    if (Platform.isAndroid) {
+      if (androidInfo.version.sdkInt < 30) {
+        await BackupGeneral.requestStoragePermission(context);
+        await XLSXImport.importXLSXLegacyStorage(context);
+      } else {
+        await XLSXImport.importXLSX(context);
+      }
+    } else if (Platform.isIOS) {
+      await XLSXImport.importXLSX(context);
+    }
+
+    setState(() => _importingXLSX = false);
   }
 
   _startCreatingCloudBackup(context) async {
@@ -258,6 +276,7 @@ class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
                             _buildImportCSV(),
                             _buildImportGoodreadsCSV(),
                             _buildImportBookwyrmCSV(),
+                            _buildImportXLSX(),
                           ],
                         ),
                       ],
@@ -541,6 +560,28 @@ class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
               height: 24,
             ),
       onPressed: _startImportingCSV,
+    );
+  }
+
+  SettingsTile _buildImportXLSX() {
+    return SettingsTile(
+      title: const Text(
+        'Импорт XLSX',
+        style: TextStyle(
+          fontSize: 16,
+        ),
+      ),
+      leading: (_importingXLSX)
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(),
+            )
+          : const Icon(FontAwesomeIcons.fileExcel),
+      description: const Text(
+        'Импорт книг из файла Excel (.xlsx)',
+      ),
+      onPressed: _startImportingXLSX,
     );
   }
 

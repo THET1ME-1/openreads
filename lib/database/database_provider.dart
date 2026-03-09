@@ -28,7 +28,7 @@ class DatabaseProvider {
 
     return await openDatabase(
       path,
-      version: 9,
+      version: 10,
       onCreate: (Database db, int version) async {
         await db.execute("CREATE TABLE booksTable ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -54,7 +54,8 @@ class DatabaseProvider {
             "blur_hash TEXT, "
             "readings TEXT, "
             "date_added TEXT, "
-            "date_modified TEXT "
+            "date_modified TEXT, "
+            "narrators TEXT "
             ")");
 
         await db.execute("CREATE TABLE seriesTable ("
@@ -108,6 +109,9 @@ class DatabaseProvider {
               break;
             case 8:
               _updateBookDatabaseV8toLatest(batch);
+              break;
+            case 9:
+              _updateBookDatabaseV9toLatest(batch);
               break;
           }
 
@@ -176,6 +180,10 @@ class DatabaseProvider {
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_book_series ON bookSeriesTable(book_id, series_id)",
   ];
 
+  final migrationScriptsV10 = [
+    "ALTER TABLE booksTable ADD narrators TEXT",
+  ];
+
   void _updateBookDatabaseV1toLatest(Batch batch) {
     _executeBatch(
       batch,
@@ -186,7 +194,8 @@ class DatabaseProvider {
           migrationScriptsV6 +
           migrationScriptsV7 +
           migrationScriptsV8 +
-          migrationScriptsV9,
+          migrationScriptsV9 +
+          migrationScriptsV10,
     );
   }
 
@@ -199,7 +208,8 @@ class DatabaseProvider {
           migrationScriptsV6 +
           migrationScriptsV7 +
           migrationScriptsV8 +
-          migrationScriptsV9,
+          migrationScriptsV9 +
+          migrationScriptsV10,
     );
   }
 
@@ -211,7 +221,8 @@ class DatabaseProvider {
           migrationScriptsV6 +
           migrationScriptsV7 +
           migrationScriptsV8 +
-          migrationScriptsV9,
+          migrationScriptsV9 +
+          migrationScriptsV10,
     );
   }
 
@@ -222,7 +233,8 @@ class DatabaseProvider {
           migrationScriptsV6 +
           migrationScriptsV7 +
           migrationScriptsV8 +
-          migrationScriptsV9,
+          migrationScriptsV9 +
+          migrationScriptsV10,
     );
   }
 
@@ -232,28 +244,39 @@ class DatabaseProvider {
       migrationScriptsV6 +
           migrationScriptsV7 +
           migrationScriptsV8 +
-          migrationScriptsV9,
+          migrationScriptsV9 +
+          migrationScriptsV10,
     );
   }
 
   void _updateBookDatabaseV6toLatest(Batch batch) {
     _executeBatch(
       batch,
-      migrationScriptsV7 + migrationScriptsV8 + migrationScriptsV9,
+      migrationScriptsV7 +
+          migrationScriptsV8 +
+          migrationScriptsV9 +
+          migrationScriptsV10,
     );
   }
 
   void _updateBookDatabaseV7toLatest(Batch batch) {
     _executeBatch(
       batch,
-      migrationScriptsV8 + migrationScriptsV9,
+      migrationScriptsV8 + migrationScriptsV9 + migrationScriptsV10,
     );
   }
 
   void _updateBookDatabaseV8toLatest(Batch batch) {
     _executeBatch(
       batch,
-      migrationScriptsV9,
+      migrationScriptsV9 + migrationScriptsV10,
+    );
+  }
+
+  void _updateBookDatabaseV9toLatest(Batch batch) {
+    _executeBatch(
+      batch,
+      migrationScriptsV10,
     );
   }
 }

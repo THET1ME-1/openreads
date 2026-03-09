@@ -213,6 +213,10 @@ class BackupExport {
 
       final encodedArchive = encoder.encode(archive);
 
+      if (encodedArchive == null) {
+        throw Exception('Failed to encode backup archive');
+      }
+
       File(tmpFilePath).writeAsBytesSync(encodedArchive);
 
       return tmpFilePath;
