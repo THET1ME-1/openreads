@@ -18,7 +18,9 @@ import 'package:openreads/generated/locale_keys.g.dart';
 import 'package:openreads/logic/cubit/current_book_cubit.dart';
 import 'package:openreads/logic/cubit/default_book_tags_cubit.dart';
 import 'package:openreads/logic/cubit/edit_book_cubit.dart';
+import 'package:openreads/logic/cubit/edit_book_series_cubit.dart';
 import 'package:openreads/model/reading.dart';
+import 'package:openreads/model/book_series_link.dart';
 import 'package:openreads/resources/open_library_service.dart';
 import 'package:openreads/main.dart';
 import 'package:openreads/model/book.dart';
@@ -26,6 +28,7 @@ import 'package:openreads/ui/add_book_screen/widgets/cover_view_edit.dart';
 import 'package:openreads/ui/add_book_screen/widgets/widgets.dart';
 import 'package:openreads/ui/book_screen/book_screen.dart';
 import 'package:openreads/ui/common/keyboard_dismissable.dart';
+import 'package:openreads/ui/series_screen/widgets/series_selector.dart';
 
 class AddBookScreen extends StatefulWidget {
   const AddBookScreen({
@@ -149,9 +152,13 @@ class _AddBookScreenState extends State<AddBookScreen> {
     book = book.copyWith(id: newBookID);
     if (!mounted) return;
 
-    context.read<CurrentBookCubit>().setBook(book);
+    // Save series links
+    final seriesLinks = context.read<EditBookSeriesCubit>().state;
+    if (seriesLinks.isNotEmpty) {
+      await seriesCubit.setBookSeriesLinks(newBookID, seriesLinks);
+    }
 
-    // context.read<PbSyncBloc>().add(TriggerSyncEvent(booksToSync: [book]));
+    context.read<CurrentBookCubit>().setBook(book);
 
     Navigator.pushAndRemoveUntil(
       context,
@@ -182,7 +189,11 @@ class _AddBookScreenState extends State<AddBookScreen> {
           );
     }
 
-    // context.read<PbSyncBloc>().add(TriggerSyncEvent(booksToSync: [book]));
+    // Save series links
+    if (book.id != null) {
+      final seriesLinks = context.read<EditBookSeriesCubit>().state;
+      await seriesCubit.setBookSeriesLinks(book.id!, seriesLinks);
+    }
 
     Navigator.pop(context);
   }
@@ -380,6 +391,17 @@ class _AddBookScreenState extends State<AddBookScreen> {
     }
   }
 
+  void _loadSeriesLinks(Book book) async {
+    if (book.id != null) {
+      final links = await seriesCubit.getSeriesForBookDirect(book.id!);
+      if (mounted) {
+        context.read<EditBookSeriesCubit>().setLinks(links);
+      }
+    } else {
+      context.read<EditBookSeriesCubit>().clear();
+    }
+  }
+
   void _downloadInitData() {
     if (widget.fromOpenLibrary || widget.fromOpenLibraryEdition) {
       if (widget.coverOpenLibraryID != null) {
@@ -401,6 +423,7 @@ class _AddBookScreenState extends State<AddBookScreen> {
 
     _setDefaultTags(book);
     _prefillBookDetails(book);
+    _loadSeriesLinks(book);
     _attachListeners();
     _downloadInitData();
 
@@ -653,6 +676,18 @@ class _AddBookScreenState extends State<AddBookScreen> {
                       onEditingComplete: () {},
                       unselectTag: (tag) => _unselectTag(tag),
                       allTags: snapshot.data,
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                // Series selector
+                BlocBuilder<EditBookSeriesCubit, List<BookSeriesLink>>(
+                  builder: (context, seriesLinks) {
+                    return SeriesSelector(
+                      seriesLinks: seriesLinks,
+                      onChanged: (links) {
+                        context.read<EditBookSeriesCubit>().setLinks(links);
+                      },
                     );
                   },
                 ),

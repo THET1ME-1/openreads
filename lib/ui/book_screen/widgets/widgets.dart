@@ -9,3 +9,4 @@ export 'book_detail_date_added_updated.dart';
 export 'quick_rating_dialog.dart';
 export 'book_detail_long.dart';
 export 'like_button.dart';
+export 'book_series_info.dart';

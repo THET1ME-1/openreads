@@ -53,8 +53,17 @@ class _HomeNavigationBarState extends State<HomeNavigationBar> {
           ),
           NavigationDestination(
             icon: FaIcon(
-              FontAwesomeIcons.chartSimple,
+              FontAwesomeIcons.layerGroup,
               color: widget.currentIndex == 1
+                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                  : Theme.of(context).colorScheme.onSurface,
+            ),
+            label: LocaleKeys.series.tr(),
+          ),
+          NavigationDestination(
+            icon: FaIcon(
+              FontAwesomeIcons.chartSimple,
+              color: widget.currentIndex == 2
                   ? Theme.of(context).colorScheme.onPrimaryContainer
                   : Theme.of(context).colorScheme.onSurface,
             ),

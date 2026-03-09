@@ -25,6 +25,7 @@ import 'package:openreads/logic/bloc/sort_bloc/sort_unfinished_books_bloc.dart';
 import 'package:openreads/logic/bloc/theme_bloc/theme_bloc.dart';
 import 'package:openreads/logic/bloc/welcome_bloc/welcome_bloc.dart';
 import 'package:openreads/logic/cubit/book_cubit.dart';
+import 'package:openreads/logic/cubit/series_cubit.dart';
 import 'package:openreads/logic/cubit/book_lists_order_cubit.dart';
 import 'package:openreads/logic/cubit/books_tab_index_cubit.dart';
 import 'package:openreads/logic/cubit/current_book_cubit.dart';
@@ -32,6 +33,7 @@ import 'package:openreads/logic/cubit/default_book_status_cubit.dart';
 import 'package:openreads/logic/cubit/default_book_tags_cubit.dart';
 import 'package:openreads/logic/cubit/display_cubit.dart';
 import 'package:openreads/logic/cubit/edit_book_cubit.dart';
+import 'package:openreads/logic/cubit/edit_book_series_cubit.dart';
 import 'package:openreads/logic/cubit/selected_books_cubit.dart';
 import 'package:openreads/resources/connectivity_service.dart';
 import 'package:openreads/resources/open_library_service.dart';
@@ -40,6 +42,7 @@ import 'package:openreads/ui/welcome_screen/welcome_screen.dart';
 import 'package:path_provider/path_provider.dart';
 
 late BookCubit bookCubit;
+late SeriesCubit seriesCubit;
 late Directory appDocumentsDirectory;
 late Directory appTempDirectory;
 late GlobalKey<ScaffoldMessengerState> snackbarKey;
@@ -62,6 +65,7 @@ void main() async {
   snackbarKey = GlobalKey<ScaffoldMessengerState>();
 
   bookCubit = BookCubit(); // TODO: move to app's context
+  seriesCubit = SeriesCubit();
 
   final localeCodes = supportedLocales.map((e) => e.locale).toList();
 
@@ -83,6 +87,7 @@ class App extends StatelessWidget {
     final bookProviders = [
       BlocProvider(create: (_) => EditBookCubit()),
       BlocProvider(create: (_) => EditBookCoverCubit()),
+      BlocProvider(create: (_) => EditBookSeriesCubit()),
       BlocProvider(create: (_) => CurrentBookCubit()),
       BlocProvider(create: (_) => SelectedBooksCubit()),
       BlocProvider(create: (_) => ChallengeBloc()),

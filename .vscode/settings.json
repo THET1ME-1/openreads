@@ -1,7 +1,16 @@
-// projectwithsomedartnotstructured/.vscode/settings
 {
     "problems.decorations.enabled": true,
     "dart.analysisExcludedFolders": [
         "submodules"
-    ]
+    ],
+    "files.exclude": {
+        "submodules/flutter": true
+    },
+    "search.exclude": {
+        "submodules/**": true
+    },
+    "java.project.exclusion": [
+        "**/submodules/**"
+    ],
+    "gradle.nestedProjects": false
 }

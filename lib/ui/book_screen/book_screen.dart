@@ -134,6 +134,7 @@ class BookScreen extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildTitleDetail(state),
+                      _buildSeriesInfo(state),
                       _buildStatusDetail(state, context),
                       _buildBookFormatDetail(state),
                       _buildPublicationYearDetail(state),
@@ -263,6 +264,11 @@ class BookScreen extends StatelessWidget {
       tags: state.tags?.split('|||||'),
       bookType: state.bookFormat,
     );
+  }
+
+  Widget _buildSeriesInfo(Book state) {
+    if (state.id == null) return const SizedBox();
+    return BookSeriesInfo(bookId: state.id!);
   }
 
   BookStatusDetail _buildStatusDetail(Book state, BuildContext context) {

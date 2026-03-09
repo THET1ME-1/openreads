@@ -14,12 +14,16 @@ import 'package:openreads/logic/bloc/theme_bloc/theme_bloc.dart';
 import 'package:openreads/logic/cubit/default_book_status_cubit.dart';
 import 'package:openreads/logic/cubit/edit_book_cubit.dart';
 import 'package:openreads/logic/cubit/selected_books_cubit.dart';
+import 'package:openreads/main.dart';
 import 'package:openreads/model/book.dart';
+import 'package:openreads/model/book_series.dart';
 import 'package:openreads/ui/add_book_screen/add_book_screen.dart';
 import 'package:openreads/ui/books_screen/books_screen.dart';
 import 'package:openreads/ui/display_screen/display_screen.dart';
 import 'package:openreads/ui/search_ol_screen/search_ol_screen.dart';
 import 'package:openreads/ui/search_page/search_page.dart';
+import 'package:openreads/ui/series_screen/series_list_screen.dart';
+import 'package:openreads/ui/series_screen/widgets/add_edit_series_dialog.dart';
 import 'package:openreads/ui/settings_screen/settings_screen.dart';
 import 'package:openreads/ui/statistics_screen/statistics_screen.dart';
 
@@ -122,7 +126,8 @@ class _HomeScreenState extends State<HomeScreen> {
       } else if (choice == menuOptions[2]) {
         goToSettingsScreen();
       }
-    } else if (currentPageIndex == 1) {
+    } else {
+      // Series and Statistics tabs only have Settings
       if (choice == menuOptions[0]) {
         goToSettingsScreen();
       }
@@ -280,8 +285,10 @@ class _HomeScreenState extends State<HomeScreen> {
     return currentPageIndex == 0
         ? const BooksScreen()
         : currentPageIndex == 1
-            ? const StatisticsScreen()
-            : const SizedBox.shrink();
+            ? const SeriesListScreen()
+            : currentPageIndex == 2
+                ? const StatisticsScreen()
+                : const SizedBox.shrink();
   }
 
   AppBar _buildMultiSelectAppBar(
@@ -311,7 +318,20 @@ class _HomeScreenState extends State<HomeScreen> {
     List<int> multiSelectList,
   ) {
     return currentPageIndex != 0
-        ? const SizedBox.shrink()
+        ? currentPageIndex == 1
+            ? FloatingActionButton(
+                onPressed: () async {
+                  final result = await showDialog<BookSeries>(
+                    context: context,
+                    builder: (context) => const AddEditSeriesDialog(),
+                  );
+                  if (result != null) {
+                    await seriesCubit.addSeries(result);
+                  }
+                },
+                child: const FaIcon(FontAwesomeIcons.plus),
+              )
+            : const SizedBox.shrink()
         : multiSelectList.isNotEmpty
             ? MultiSelectFAB()
             : FloatingActionButton(

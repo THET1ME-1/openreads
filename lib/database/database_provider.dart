@@ -28,7 +28,7 @@ class DatabaseProvider {
 
     return await openDatabase(
       path,
-      version: 8,
+      version: 9,
       onCreate: (Database db, int version) async {
         await db.execute("CREATE TABLE booksTable ("
             "id INTEGER PRIMARY KEY AUTOINCREMENT, "
@@ -56,6 +56,29 @@ class DatabaseProvider {
             "date_added TEXT, "
             "date_modified TEXT "
             ")");
+
+        await db.execute("CREATE TABLE seriesTable ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "name TEXT NOT NULL, "
+            "description TEXT, "
+            "parent_series_id INTEGER, "
+            "sort_order INTEGER DEFAULT 0, "
+            "date_created TEXT, "
+            "date_modified TEXT, "
+            "FOREIGN KEY (parent_series_id) REFERENCES seriesTable(id) ON DELETE SET NULL"
+            ")");
+
+        await db.execute("CREATE TABLE bookSeriesTable ("
+            "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            "book_id INTEGER NOT NULL, "
+            "series_id INTEGER NOT NULL, "
+            "order_in_series REAL, "
+            "FOREIGN KEY (book_id) REFERENCES booksTable(id) ON DELETE CASCADE, "
+            "FOREIGN KEY (series_id) REFERENCES seriesTable(id) ON DELETE CASCADE"
+            ")");
+
+        await db.execute(
+            "CREATE UNIQUE INDEX idx_book_series ON bookSeriesTable(book_id, series_id)");
       },
       onUpgrade: (Database db, int oldVersion, int newVersion) async {
         if (newVersion > oldVersion) {
@@ -82,6 +105,9 @@ class DatabaseProvider {
               break;
             case 7:
               _updateBookDatabaseV7toLatest(batch);
+              break;
+            case 8:
+              _updateBookDatabaseV8toLatest(batch);
               break;
           }
 
@@ -128,6 +154,28 @@ class DatabaseProvider {
     "ALTER TABLE booksTable ADD date_modified TEXT DEFAULT '${DateTime.now().toIso8601String()}'",
   ];
 
+  final migrationScriptsV9 = [
+    "CREATE TABLE IF NOT EXISTS seriesTable ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "name TEXT NOT NULL, "
+        "description TEXT, "
+        "parent_series_id INTEGER, "
+        "sort_order INTEGER DEFAULT 0, "
+        "date_created TEXT, "
+        "date_modified TEXT, "
+        "FOREIGN KEY (parent_series_id) REFERENCES seriesTable(id) ON DELETE SET NULL"
+        ")",
+    "CREATE TABLE IF NOT EXISTS bookSeriesTable ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "book_id INTEGER NOT NULL, "
+        "series_id INTEGER NOT NULL, "
+        "order_in_series REAL, "
+        "FOREIGN KEY (book_id) REFERENCES booksTable(id) ON DELETE CASCADE, "
+        "FOREIGN KEY (series_id) REFERENCES seriesTable(id) ON DELETE CASCADE"
+        ")",
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_book_series ON bookSeriesTable(book_id, series_id)",
+  ];
+
   void _updateBookDatabaseV1toLatest(Batch batch) {
     _executeBatch(
       batch,
@@ -137,7 +185,8 @@ class DatabaseProvider {
           migrationScriptsV5 +
           migrationScriptsV6 +
           migrationScriptsV7 +
-          migrationScriptsV8,
+          migrationScriptsV8 +
+          migrationScriptsV9,
     );
   }
 
@@ -149,7 +198,8 @@ class DatabaseProvider {
           migrationScriptsV5 +
           migrationScriptsV6 +
           migrationScriptsV7 +
-          migrationScriptsV8,
+          migrationScriptsV8 +
+          migrationScriptsV9,
     );
   }
 
@@ -160,7 +210,8 @@ class DatabaseProvider {
           migrationScriptsV5 +
           migrationScriptsV6 +
           migrationScriptsV7 +
-          migrationScriptsV8,
+          migrationScriptsV8 +
+          migrationScriptsV9,
     );
   }
 
@@ -170,28 +221,39 @@ class DatabaseProvider {
       migrationScriptsV5 +
           migrationScriptsV6 +
           migrationScriptsV7 +
-          migrationScriptsV8,
+          migrationScriptsV8 +
+          migrationScriptsV9,
     );
   }
 
   void _updateBookDatabaseV5toLatest(Batch batch) {
     _executeBatch(
       batch,
-      migrationScriptsV6 + migrationScriptsV7 + migrationScriptsV8,
+      migrationScriptsV6 +
+          migrationScriptsV7 +
+          migrationScriptsV8 +
+          migrationScriptsV9,
     );
   }
 
   void _updateBookDatabaseV6toLatest(Batch batch) {
     _executeBatch(
       batch,
-      migrationScriptsV7 + migrationScriptsV8,
+      migrationScriptsV7 + migrationScriptsV8 + migrationScriptsV9,
     );
   }
 
   void _updateBookDatabaseV7toLatest(Batch batch) {
     _executeBatch(
       batch,
-      migrationScriptsV8,
+      migrationScriptsV8 + migrationScriptsV9,
+    );
+  }
+
+  void _updateBookDatabaseV8toLatest(Batch batch) {
+    _executeBatch(
+      batch,
+      migrationScriptsV9,
     );
   }
 }
