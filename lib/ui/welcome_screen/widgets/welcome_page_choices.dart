@@ -10,6 +10,7 @@ class WelcomePageChoices extends StatelessWidget {
     required this.importOpenreadsCsv,
     required this.importGoodreadsCsv,
     required this.importBookwyrmCsv,
+    required this.importNotionCsv,
     required this.skipImportingBooks,
   });
 
@@ -17,6 +18,7 @@ class WelcomePageChoices extends StatelessWidget {
   final Function() importOpenreadsCsv;
   final Function() importGoodreadsCsv;
   final Function() importBookwyrmCsv;
+  final Function() importNotionCsv;
   final Function() skipImportingBooks;
 
   @override
@@ -63,6 +65,10 @@ class WelcomePageChoices extends StatelessWidget {
                         WelcomeChoiceButton(
                           description: LocaleKeys.import_bookwyrm_csv.tr(),
                           onPressed: importBookwyrmCsv,
+                        ),
+                        WelcomeChoiceButton(
+                          description: 'Импорт Notion CSV',
+                          onPressed: importNotionCsv,
                         ),
                       ],
                     ),

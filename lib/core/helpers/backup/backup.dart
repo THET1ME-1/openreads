@@ -5,4 +5,5 @@ export 'csv_export.dart';
 export 'csv_import_goodreads.dart';
 export 'csv_import_openreads.dart';
 export 'csv_import_bookwyrm.dart';
+export 'csv_import_notion.dart';
 export 'xlsx_import.dart';

@@ -36,6 +36,7 @@ class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
   bool _importingGoodreadsCSV = false;
   bool _importingBookwyrmCSV = false;
   bool _importingCSV = false;
+  bool _importingNotionCSV = false;
   bool _importingXLSX = false;
 
   late DeviceInfoPlugin deviceInfo;
@@ -124,6 +125,23 @@ class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
     }
 
     setState(() => _importingCSV = false);
+  }
+
+  _startImportingNotionCSV(context) async {
+    setState(() => _importingNotionCSV = true);
+
+    if (Platform.isAndroid) {
+      if (androidInfo.version.sdkInt < 30) {
+        await BackupGeneral.requestStoragePermission(context);
+        await CSVImportNotion.importCSVLegacyStorage(context);
+      } else {
+        await CSVImportNotion.importCSV(context);
+      }
+    } else if (Platform.isIOS) {
+      await CSVImportNotion.importCSV(context);
+    }
+
+    setState(() => _importingNotionCSV = false);
   }
 
   _startImportingXLSX(context) async {
@@ -276,6 +294,7 @@ class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
                             _buildImportCSV(),
                             _buildImportGoodreadsCSV(),
                             _buildImportBookwyrmCSV(),
+                            _buildImportNotionCSV(),
                             _buildImportXLSX(),
                           ],
                         ),
@@ -560,6 +579,28 @@ class _SettingsBackupScreenState extends State<SettingsBackupScreen> {
               height: 24,
             ),
       onPressed: _startImportingCSV,
+    );
+  }
+
+  SettingsTile _buildImportNotionCSV() {
+    return SettingsTile(
+      title: const Text(
+        'Импорт Notion CSV',
+        style: TextStyle(
+          fontSize: 16,
+        ),
+      ),
+      leading: (_importingNotionCSV)
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(),
+            )
+          : const Icon(FontAwesomeIcons.n),
+      description: const Text(
+        'Импорт книг из Notion CSV экспорта',
+      ),
+      onPressed: _startImportingNotionCSV,
     );
   }
 

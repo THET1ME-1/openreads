@@ -9,6 +9,7 @@ import 'package:openreads/core/helpers/backup/backup_general.dart';
 import 'package:openreads/core/helpers/backup/backup_import.dart';
 import 'package:openreads/core/helpers/backup/csv_import_bookwyrm.dart';
 import 'package:openreads/core/helpers/backup/csv_import_goodreads.dart';
+import 'package:openreads/core/helpers/backup/csv_import_notion.dart';
 import 'package:openreads/core/helpers/backup/csv_import_openreads.dart';
 import 'package:openreads/core/themes/app_theme.dart';
 import 'package:openreads/logic/bloc/migration_v1_to_v2_bloc/migration_v1_to_v2_bloc.dart';
@@ -123,6 +124,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     }
   }
 
+  _importNotionCsv() async {
+    if (_checkIfMigrationIsOngoing()) return;
+    _setWelcomeState();
+
+    if (Platform.isAndroid) {
+      final androidInfo = await DeviceInfoPlugin().androidInfo;
+
+      if (androidInfo.version.sdkInt < 30) {
+        await BackupGeneral.requestStoragePermission(context);
+        await CSVImportNotion.importCSVLegacyStorage(context);
+      } else {
+        await CSVImportNotion.importCSV(context);
+      }
+    } else if (Platform.isIOS) {
+      await CSVImportNotion.importCSV(context);
+    }
+  }
+
   _skipImportingBooks() {
     if (_checkIfMigrationIsOngoing()) return;
 
@@ -218,6 +237,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           importOpenreadsCsv: _importOpenreadsCsv,
                           importGoodreadsCsv: _importGoodreadsCsv,
                           importBookwyrmCsv: _importBookwyrmCsv,
+                          importNotionCsv: _importNotionCsv,
                           skipImportingBooks: _skipImportingBooks,
                         ),
                       ],
